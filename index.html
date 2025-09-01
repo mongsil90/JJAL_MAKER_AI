@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>무도 짤 메이커</title>
+  <title>스티커 에디터 (모바일 개선)</title>
   <link rel="stylesheet" href="styles.css" />
   <script defer src="app.js"></script>
 </head>
@@ -14,39 +14,55 @@
       <input id="bg-upload" type="file" accept="image/*" />
     </label>
 
+    <!-- 모드: 뷰 이동/확대 vs 스티커 편집 -->
     <div class="controls">
-      <button id="zoom-out" class="btn" title="축소">−</button>
-      <button id="zoom-in" class="btn" title="확대">+</button>
-      <button id="rot-left" class="btn" title="반시계 회전">↺</button>
-      <button id="rot-right" class="btn" title="시계 회전">↻</button>
+      <label>
+        <input type="radio" name="mode" value="view" id="mode-view" />
+        화면 이동/확대
+      </label>
+      <label>
+        <input type="radio" name="mode" value="edit" id="mode-edit" checked />
+        스티커 편집
+      </label>
     </div>
 
+    <!-- 뷰(카메라) 제어 -->
+    <div class="controls">
+      <button id="fit-btn" class="btn" title="화면에 맞춤">맞춤</button>
+      <button id="zoom100-btn" class="btn" title="100%">100%</button>
+      <button id="view-zoom-out" class="btn" title="화면 축소">−</button>
+      <button id="view-zoom-in" class="btn" title="화면 확대">+</button>
+    </div>
+
+    <!-- 선택 스티커 제어 (편집 모드) -->
+    <div class="controls">
+      <button id="sticker-zoom-out" class="btn" title="스티커 축소">스티커 −</button>
+      <button id="sticker-zoom-in" class="btn" title="스티커 확대">스티커 +</button>
+      <button id="rot-left" class="btn" title="반시계">↺</button>
+      <button id="rot-right" class="btn" title="시계">↻</button>
+      <button id="delete-btn" class="btn" title="삭제">삭제</button>
+    </div>
+
+    <!-- 내보내기 -->
     <div class="save-controls">
       <button id="download-btn" class="btn primary">PNG로 저장</button>
-      <button id="share-btn" class="btn">공유하기</button>
       <button id="open-newtab-btn" class="btn">새 탭으로 열기</button>
+      <button id="share-btn" class="btn">공유</button>
     </div>
-
-    <span class="hint" aria-hidden="true">
-      데스크톱: 드래그 이동 · 휠 크기 · [ / ] 회전 · Delete 삭제<br/>
-      모바일: 썸네일 탭 추가 · 한손가락 이동 · 두손가락 핀치/회전
-    </span>
   </header>
 
   <main class="layout">
     <aside class="gallery">
       <h2>스티커 갤러리</h2>
-      <div id="sticker-gallery" class="sticker-grid">
-        <!-- JS가 stickers/manifest.json을 읽어 자동 생성 -->
-      </div>
+      <div id="sticker-gallery" class="sticker-grid"><!-- JS가 채움 --></div>
+      <p class="hint small">모바일: 썸네일 탭 → 캔버스 중앙 추가</p>
     </aside>
-    
-    <section class="stage">
-      <!-- CSS 크기는 유지하고, 내부 비트맵은 DPR만큼 확대(레티나 대응) -->
-      <canvas id="canvas" width="900" height="600" aria-label="스티커 편집 캔버스"></canvas>
-    </section>
-    <button id="delete-btn" class="btn">삭제</button>
 
+    <section class="stage">
+      <!-- CSS 크기만 바꾸고 내부 비트맵은 DPR로 스케일 -->
+      <canvas id="canvas" width="900" height="600" aria-label="스티커 편집 캔버스"></canvas>
+      <p class="hint small">한 손가락: 편집(드래그) / 두 손가락: 화면 핀치줌(뷰 모드)</p>
+    </section>
   </main>
 </body>
 </html>
