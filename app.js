@@ -10,6 +10,7 @@ const btnZoomOut = document.getElementById('zoom-out');
 const btnRotL = document.getElementById('rot-left');
 const btnRotR = document.getElementById('rot-right');
 const deleteBtn = document.getElementById('delete-btn'); // 선택(있으면 사용)
+const shareBtn = document.getElementById('share-btn');
 
 // ===== 상태 =====
 let background = null; // { img, w, h }
@@ -327,41 +328,83 @@ deleteBtn?.addEventListener('click', () => {
 });
 
 // ===== 선택 표시 제외하고 내보내기(오프스크린 캔버스) =====
-function exportImageToDataURL() {
-  // 1) 오프스크린 준비: 현재 내부 해상도와 동일
-  const off = document.createElement('canvas');
-  off.width = canvas.width;
-  off.height = canvas.height;
-  const offCtx = off.getContext('2d');
+// 기존 함수 대체: 선택 표시 없이 그린 후 Blob을 Promise로 반환
+function exportImageToBlob() {
+  return new Promise((resolve) => {
+    const off = document.createElement('canvas');
+    off.width = canvas.width;
+    off.height = canvas.height;
+    const offCtx = off.getContext('2d');
 
-  // 2) 화면과 동일한 좌표계 세팅
-  const dpr = canvas.width / cssSize.w; // 내부픽셀 / CSS픽셀
-  offCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const dpr = canvas.width / cssSize.w; // 내부픽셀/논리픽셀
+    offCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawScene(offCtx, { showSelection: false });
 
-  // 3) 선택표시 없이 그리기
-  drawScene(offCtx, { showSelection: false });
-
-  // 4) PNG DataURL 반환
-  return off.toDataURL('image/png');
+    // PNG Blob 만들기 (품질 필요시 JPEG로 바꿀 수 있음)
+    off.toBlob((blob) => resolve(blob), 'image/png');
+  });
 }
 
+
 // ===== 저장/공유 =====
-downloadBtn?.addEventListener('click', () => {
+downloadBtn?.addEventListener('click', async () => {
   if (!background) return alert('먼저 배경 이미지를 업로드하세요.');
-  const url = exportImageToDataURL();
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'stickered.png';
+
+  const blob = await exportImageToBlob();
+  const url = URL.createObjectURL(blob);
+
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  if (isIOS) window.open(url, '_blank'); // iOS 대안
-  else a.click();
+
+  if (isIOS) {
+    // 새 탭으로 열기 → 길게 눌러 "사진에 저장"
+    window.open(url, '_blank');
+    // 필요 없을 때 해제 (조금 뒤에 해제하면 안정적)
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  } else {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'stickered.png';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
 });
 
-openNewTabBtn?.addEventListener('click', () => {
+// ==== 공유하기 ====
+shareBtn?.addEventListener('click', async () => {
   if (!background) return alert('먼저 배경 이미지를 업로드하세요.');
-  const url = exportImageToDataURL();
-  window.open(url, '_blank'); // iOS에서도 롱프레스로 저장 가능
+  const blob = await exportImageToBlob();
+
+  // Web Share Level 2(파일 공유) 지원 여부 확인
+  const file = new File([blob], 'stickered.png', { type: 'image/png' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: '스티커 이미지',
+        text: '에디터에서 만든 이미지예요!'
+      });
+    } catch (e) {
+      // 사용자가 취소한 경우 등
+      console.warn(e);
+    }
+  } else {
+    // 미지원 브라우저 → 새 탭 열기 fallback
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
 });
+
+openNewTabBtn?.addEventListener('click', async () => {
+  if (!background) return alert('먼저 배경 이미지를 업로드하세요.');
+  const blob = await exportImageToBlob();
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');         // iOS에서도 동작 → 길게 눌러 저장
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+});
+
 
 // ===== 초기화 =====
 function handleResize() {
