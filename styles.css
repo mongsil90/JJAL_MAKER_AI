@@ -1,10 +1,15 @@
+/* =========================
+   Global / Theme
+========================= */
 :root {
   --ui: #0ea5e9;
   --border: #e2e8f0;
   --text: #0f172a;
   --muted: #64748b;
   --bg: #f7fafc;
+  --header-h: 64px; /* 헤더 높이 (56~72px로 조절 가능) */
 }
+
 * {
   box-sizing: border-box;
 }
@@ -14,22 +19,51 @@ body {
 }
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR",
-    sans-serif;
   color: var(--text);
   background: var(--bg);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR",
+    sans-serif;
 }
 
-/* Toolbar */
+/* 링크/버튼 기본 */
+.btn {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  cursor: pointer;
+}
+.btn.primary {
+  background: var(--ui);
+  color: #fff;
+  border-color: var(--ui);
+}
+.hint {
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.hint.small {
+  font-size: 12px;
+}
+
+/* =========================
+   Header / Toolbar (Sticky)
+========================= */
 .toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: var(--header-h);
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
+  gap: 10px;
   align-items: center;
   padding: 12px 16px;
   background: #fff;
   border-bottom: 1px solid var(--border);
 }
+
 .file-btn {
   display: inline-flex;
   gap: 8px;
@@ -43,43 +77,24 @@ body {
 .file-btn input[type="file"] {
   display: none;
 }
+
 .controls,
 .save-controls {
   display: flex;
   gap: 6px;
   align-items: center;
 }
-.btn {
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid #cbd5e1;
-  background: white;
-  cursor: pointer;
-}
-.btn.primary {
-  background: var(--ui);
-  color: #fff;
-  border-color: var(--ui);
-}
-.hint {
-  color: #475569;
-  font-size: 12px;
-  line-height: 1.3;
-}
-#delete-btn {
-    padding: 20px;
-    color: red;
-    font-size: larger;
-    font-weight: 700;
-}
 
-
-/* Layout */
+/* =========================
+   Main Layout (Full Height)
+========================= */
 .layout {
+  height: calc(100vh - var(--header-h));
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 320px 1fr; /* 갤러리 폭 (모바일에선 자동 한열) */
   gap: 16px;
   padding: 16px;
+  overflow: hidden; /* 내부에서 스크롤 관리 */
 }
 @media (max-width: 900px) {
   .layout {
@@ -87,8 +102,13 @@ body {
   }
 }
 
-/* Gallery */
+/* =========================
+   Gallery (Left Pane)
+========================= */
 .gallery {
+  height: 100%;
+  overflow: auto; /* 내부 스크롤 */
+  -webkit-overflow-scrolling: touch;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -98,69 +118,102 @@ body {
   margin: 0 0 8px 0;
   font-size: 18px;
 }
+
+/* 썸네일 그리드 (크게) */
 .sticker-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
 }
 .sticker-grid img {
   width: 100%;
-  height: 88px;
+  height: 132px; /* 110px → 132px */
   object-fit: contain;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 8px;
+  padding: 12px;
   cursor: grab;
-  touch-action: none; /* 모바일에서 썸네일 제스처 간섭 최소화 */
+  touch-action: none; /* 기본 제스처 간섭 최소화 */
 }
 .sticker-grid img:active {
   cursor: grabbing;
 }
 
-/* Stage / Canvas */
+/* =========================
+   Stage (Right Pane)
+========================= */
 .stage {
+  height: 100%;
+  overflow: auto; /* 캔버스가 커지면 스크롤 가능 */
+  -webkit-overflow-scrolling: touch;
   display: grid;
   place-items: center;
 }
+
+/* Canvas */
 #canvas {
-  width: min(100%, 1100px);
+  width: min(100%, 1100px); /* 반응형 너비 제한 */
   height: auto;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-  touch-action: none; /* 중요: 브라우저 기본 줌/스크롤 제스처 방지 → 포인터 제스처가 잘 동작 */
+  touch-action: none; /* 편집 제스처와 충돌 방지 */
 }
 
-/* 갤러리 패널 자체를 스크롤 영역으로 */
-.gallery {
-  background:#fff;
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:12px;
-
-  /* 핵심: 높이 제한 + 스크롤 */
-  max-height: 70vh;     /* 필요시 60~80vh로 조절 */
-  overflow: auto;       /* 내용이 넘치면 내부 스크롤 */
+/* =========================
+   Scrollbar (Thicker)
+========================= */
+/* WebKit (Chrome/Safari/Edge) */
+.gallery::-webkit-scrollbar,
+.stage::-webkit-scrollbar {
+  width: 14px;
+  height: 14px; /* 굵기 */
+}
+.gallery::-webkit-scrollbar-thumb,
+.stage::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* 손잡이 */
+  border-radius: 999px;
+  border: 3px solid #f1f5f9; /* 트랙 여백 */
+}
+.gallery::-webkit-scrollbar-track,
+.stage::-webkit-scrollbar-track {
+  background: #f1f5f9;
 }
 
-/* 썸네일 그리드 크기/간격 조정 */
-.sticker-grid {
-  display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); /* 카드 조금 더 큼 */
-  gap:10px;
+/* Firefox */
+.gallery,
+.stage {
+  scrollbar-width: thick;
+  scrollbar-color: #94a3b8 #f1f5f9;
 }
 
-/* 썸네일 자체 크기 ↑ */
-.sticker-grid img {
-  width:100%;
-  height:110px;         /* 88px → 110~140px로 키워도 OK */
-  object-fit:contain;
-  background:#fff;
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:10px;
-  cursor:grab;
-  touch-action: none;
+/* =========================
+   Responsive Tweaks
+========================= */
+@media (max-width: 600px) {
+  .layout {
+    gap: 12px;
+    padding: 12px;
+  }
+  .sticker-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+  }
+  .sticker-grid img {
+    height: 120px;
+    padding: 10px;
+  }
+}
+
+/* =========================
+   Utility
+========================= */
+.hidden {
+  display: none !important;
+}
+.center {
+  display: grid;
+  place-items: center;
 }
