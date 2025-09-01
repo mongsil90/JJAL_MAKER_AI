@@ -1,18 +1,19 @@
 // ===== DOM =====
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-const bgInput = document.getElementById("bg-upload");
-const galleryWrap = document.getElementById("sticker-gallery");
-const downloadBtn = document.getElementById("download-btn");
-const openNewTabBtn = document.getElementById("open-newtab-btn");
-const btnZoomIn = document.getElementById("zoom-in");
-const btnZoomOut = document.getElementById("zoom-out");
-const btnRotL = document.getElementById("rot-left");
-const btnRotR = document.getElementById("rot-right");
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const bgInput = document.getElementById('bg-upload');
+const galleryWrap = document.getElementById('sticker-gallery');
+const downloadBtn = document.getElementById('download-btn');
+const openNewTabBtn = document.getElementById('open-newtab-btn');
+const btnZoomIn = document.getElementById('zoom-in');
+const btnZoomOut = document.getElementById('zoom-out');
+const btnRotL = document.getElementById('rot-left');
+const btnRotR = document.getElementById('rot-right');
+const deleteBtn = document.getElementById('delete-btn'); // 선택(있으면 사용)
 
 // ===== 상태 =====
 let background = null; // { img, w, h }
-const stickers = []; // [{ img, w, h, x, y, scale, rot }]
+const stickers = [];   // [{ img, w, h, x, y, scale, rot }]
 let active = -1;
 
 // 드래그 & 포인터 제스처
@@ -21,7 +22,7 @@ const dragOffset = { x: 0, y: 0 };
 
 // 멀티포인터(핀치/회전) 추적
 const pointers = new Map(); // id -> {x,y}
-let gestureStart = null; // {dist, angle, scale0, rot0}
+let gestureStart = null;    // {dist, angle, scale0, rot0}
 
 // DPR(레티나) 관리
 let cssSize = { w: 900, h: 600 }; // CSS 크기(논리 좌표)
@@ -31,18 +32,17 @@ function applyDPR() {
   cssSize = { w: Math.round(rect.width), h: Math.round(rect.height) };
   canvas.width = Math.round(cssSize.w * dpr);
   canvas.height = Math.round(cssSize.h * dpr);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // 논리좌표=CSS 좌표가 되도록 변환
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // 논리좌표=CSS 좌표로 통일
 }
 
 // ===== 유틸 =====
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
 function fileToImage(file) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(img);
-    };
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
     img.onerror = reject;
     img.src = url;
   });
@@ -50,7 +50,7 @@ function fileToImage(file) {
 function loadImage(url) {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    // 동일 출처면 crossOrigin 불필요. 외부 도메인 사용 시 아래 주석 해제.
+    // 동일 출처면 crossOrigin 불필요. 외부 도메인 사용할 때만 아래 주석 해제.
     // img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
     img.onerror = reject;
@@ -59,42 +59,44 @@ function loadImage(url) {
 }
 function getCanvasPos(evt) {
   const r = canvas.getBoundingClientRect();
-  const x = evt.clientX - r.left;
-  const y = evt.clientY - r.top;
-  return { x, y };
+  return { x: evt.clientX - r.left, y: evt.clientY - r.top };
 }
 
-// ===== 렌더 =====
-function render() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+// ===== 장면 그리기(선택 표시 on/off 지원) =====
+function drawScene(anyCtx, { showSelection = true } = {}) {
   // 배경
   if (background) {
-    ctx.drawImage(background.img, 0, 0, cssSize.w, cssSize.h);
+    anyCtx.drawImage(background.img, 0, 0, cssSize.w, cssSize.h);
   } else {
-    ctx.fillStyle = "#f1f5f9";
-    ctx.fillRect(0, 0, cssSize.w, cssSize.h);
-    ctx.fillStyle = "#64748b";
-    ctx.font = "16px system-ui, sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("배경 이미지를 업로드하세요", cssSize.w / 2, cssSize.h / 2);
+    anyCtx.fillStyle = '#f1f5f9';
+    anyCtx.fillRect(0, 0, cssSize.w, cssSize.h);
+    anyCtx.fillStyle = '#64748b';
+    anyCtx.font = '16px system-ui, sans-serif';
+    anyCtx.textAlign = 'center';
+    anyCtx.fillText('배경 이미지를 업로드하세요', cssSize.w / 2, cssSize.h / 2);
   }
 
   // 스티커
   stickers.forEach((s, i) => {
-    ctx.save();
-    ctx.translate(s.x, s.y);
-    ctx.rotate(s.rot);
-    ctx.scale(s.scale, s.scale);
-    ctx.drawImage(s.img, -s.w / 2, -s.h / 2, s.w, s.h);
+    anyCtx.save();
+    anyCtx.translate(s.x, s.y);
+    anyCtx.rotate(s.rot);
+    anyCtx.scale(s.scale, s.scale);
+    anyCtx.drawImage(s.img, -s.w / 2, -s.h / 2, s.w, s.h);
 
-    if (i === active) {
-      ctx.lineWidth = 2 / s.scale;
-      ctx.strokeStyle = "#0ea5e9";
-      ctx.strokeRect(-s.w / 2, -s.h / 2, s.w, s.h);
+    if (showSelection && i === active) {
+      anyCtx.lineWidth = 2 / s.scale;
+      anyCtx.strokeStyle = '#0ea5e9';
+      anyCtx.strokeRect(-s.w / 2, -s.h / 2, s.w, s.h);
     }
-    ctx.restore();
+    anyCtx.restore();
   });
+}
+
+// ===== 화면 렌더 =====
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawScene(ctx, { showSelection: true });
 }
 
 // ===== 히트 테스트 =====
@@ -115,29 +117,27 @@ function hitTest(x, y) {
 // ===== 갤러리 생성 =====
 async function buildGallery() {
   try {
-    const res = await fetch("./stickers/manifest.json", { cache: "no-cache" });
-    if (!res.ok) throw new Error("stickers/manifest.json 로드 실패");
+    const res = await fetch('./stickers/manifest.json', { cache: 'no-cache' });
+    if (!res.ok) throw new Error('stickers/manifest.json 로드 실패');
     const manifest = await res.json();
 
-    for (const cat of manifest.categories || []) {
-      for (const item of cat.items || []) {
-        const img = document.createElement("img");
+    for (const cat of (manifest.categories || [])) {
+      for (const item of (cat.items || [])) {
+        const img = document.createElement('img');
         img.src = item.thumb || item.src;
-        img.alt = item.alt || item.title || item.id || "sticker";
-        img.width = 128;
-        img.height = 88;
-        img.loading = "lazy";
-        img.decoding = "async";
+        img.alt = item.alt || item.title || item.id || 'sticker';
+        img.width = 128; img.height = 110;
+        img.loading = 'lazy'; img.decoding = 'async';
         img.draggable = true;
 
         // 데스크톱 DnD
-        img.addEventListener("dragstart", (e) => {
-          e.dataTransfer.setData("text/uri-list", item.src);
-          e.dataTransfer.setData("text/plain", item.src);
+        img.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/uri-list', item.src);
+          e.dataTransfer.setData('text/plain', item.src);
         });
 
         // 모바일: 탭으로 중앙에 추가
-        img.addEventListener("click", async () => {
+        img.addEventListener('click', async () => {
           const stickerImg = await loadImage(item.src);
           addStickerAt(cssSize.w / 2, cssSize.h / 2, stickerImg);
         });
@@ -147,32 +147,30 @@ async function buildGallery() {
     }
   } catch (err) {
     console.error(err);
-    const p = document.createElement("p");
-    p.className = "hint";
-    p.textContent =
-      "갤러리를 불러오지 못했습니다. stickers/manifest.json 경로를 확인하세요.";
+    const p = document.createElement('p');
+    p.className = 'hint';
+    p.textContent = '갤러리를 불러오지 못했습니다. stickers/manifest.json 경로/대소문자를 확인하세요.';
     galleryWrap.appendChild(p);
   }
 }
 
-// ===== 공통: 스티커 추가 =====
+// ===== 스티커 추가 =====
 function addStickerAt(x, y, stickerImg) {
   const s = {
     img: stickerImg,
     w: stickerImg.width,
     h: stickerImg.height,
-    x,
-    y,
+    x, y,
     scale: Math.min(0.5, (cssSize.w * 0.25) / stickerImg.width),
-    rot: 0,
+    rot: 0
   };
   stickers.push(s);
   active = stickers.length - 1;
   render();
 }
 
-// ===== 배경 업로드 & 캔버스 사이즈 =====
-bgInput.addEventListener("change", async (e) => {
+// ===== 배경 업로드 & 캔버스 크기 =====
+bgInput.addEventListener('change', async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
   const img = await fileToImage(file);
@@ -183,9 +181,9 @@ bgInput.addEventListener("change", async (e) => {
   const w = Math.min(img.width, maxW);
   const h = Math.round(w / ratio);
 
-  // CSS 크기를 스타일로 지정해서 applyDPR가 그 크기에 맞춰 내부 비트맵을 설정
-  canvas.style.width = w + "px";
-  canvas.style.height = h + "px";
+  // CSS 크기 지정 → applyDPR가 내부 비트맵을 설정
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
   applyDPR();
 
   background = { img, w: img.width, h: img.height };
@@ -193,20 +191,18 @@ bgInput.addEventListener("change", async (e) => {
 });
 
 // ===== 데스크톱: DnD로 추가 =====
-canvas.addEventListener("dragover", (e) => e.preventDefault());
-canvas.addEventListener("drop", async (e) => {
+canvas.addEventListener('dragover', (e) => e.preventDefault());
+canvas.addEventListener('drop', async (e) => {
   e.preventDefault();
-  const url =
-    e.dataTransfer.getData("text/uri-list") ||
-    e.dataTransfer.getData("text/plain");
+  const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
   if (!url) return;
-  const { x, y } = getCanvasPos(e);
+  const p = getCanvasPos(e);
   const stickerImg = await loadImage(url);
-  addStickerAt(x, y, stickerImg);
+  addStickerAt(p.x, p.y, stickerImg);
 });
 
 // ===== 포인터 이벤트(모바일/데스크톱 공통) =====
-canvas.addEventListener("pointerdown", (e) => {
+canvas.addEventListener('pointerdown', (e) => {
   canvas.setPointerCapture(e.pointerId);
   const p = getCanvasPos(e);
   pointers.set(e.pointerId, p);
@@ -216,13 +212,15 @@ canvas.addEventListener("pointerdown", (e) => {
     const i = hitTest(p.x, p.y);
     active = i;
     if (i !== -1) {
-      // 선택한 스티커를 최상단으로
+      // 선택한 스티커 최상단으로
       stickers.push(stickers.splice(i, 1)[0]);
       active = stickers.length - 1;
       const s = stickers[active];
       dragging = true;
       dragOffset.x = p.x - s.x;
       dragOffset.y = p.y - s.y;
+      render();
+    } else {
       render();
     }
   } else if (pointers.size === 2 && active !== -1) {
@@ -232,13 +230,13 @@ canvas.addEventListener("pointerdown", (e) => {
       dist: Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y),
       angle: Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x),
       scale0: stickers[active].scale,
-      rot0: stickers[active].rot,
+      rot0: stickers[active].rot
     };
     dragging = false; // 멀티터치 중에는 드래그 중지
   }
 });
 
-canvas.addEventListener("pointermove", (e) => {
+canvas.addEventListener('pointermove', (e) => {
   if (!pointers.has(e.pointerId)) return;
   const p = getCanvasPos(e);
   pointers.set(e.pointerId, p);
@@ -265,102 +263,112 @@ canvas.addEventListener("pointermove", (e) => {
   }
 });
 
-canvas.addEventListener("pointerup", (e) => {
-  canvas.releasePointerCapture(e.pointerId);
+function endPointer(e) {
+  canvas.releasePointerCapture?.(e.pointerId);
   pointers.delete(e.pointerId);
   if (pointers.size < 2) gestureStart = null;
   if (pointers.size === 0) dragging = false;
-});
-canvas.addEventListener("pointercancel", (e) => {
-  pointers.delete(e.pointerId);
-  gestureStart = null;
-  dragging = false;
-});
+}
+canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('pointercancel', endPointer);
+canvas.addEventListener('pointerleave', endPointer);
 
-// ===== 데스크톱 보조: 휠, 키 =====
-canvas.addEventListener(
-  "wheel",
-  (e) => {
-    if (active === -1) return;
-    e.preventDefault();
-    const s = stickers[active];
-    const delta = -Math.sign(e.deltaY) * 0.08;
-    s.scale = clamp(s.scale + delta, 0.1, 6);
-    render();
-  },
-  { passive: false }
-);
+// ===== 데스크톱 보조: 휠/키 =====
+canvas.addEventListener('wheel', (e) => {
+  if (active === -1) return;
+  e.preventDefault();
+  const s = stickers[active];
+  const delta = -Math.sign(e.deltaY) * 0.08; // 위로 휠 = 확대
+  s.scale = clamp(s.scale + delta, 0.1, 6);
+  render();
+}, { passive: false });
 
-window.addEventListener("keydown", (e) => {
+window.addEventListener('keydown', (e) => {
   if (active === -1) return;
   const s = stickers[active];
-  if (e.key === "[") {
-    s.rot -= Math.PI / 90;
-    render();
-  } else if (e.key === "]") {
-    s.rot += Math.PI / 90;
-    render();
-  } else if (e.key === "Delete" || e.key === "Backspace") {
+  if (e.key === '[') { s.rot -= Math.PI / 90; render(); }
+  else if (e.key === ']') { s.rot += Math.PI / 90; render(); }
+  else if (e.key === 'Delete' || e.key === 'Backspace') {
     stickers.splice(active, 1);
     active = -1;
     render();
   }
 });
 
-// ===== UI 버튼(모바일 보조) =====
-btnZoomIn.addEventListener("click", () => {
+// ===== UI 버튼(모바일 보조/공통) =====
+btnZoomIn?.addEventListener('click', () => {
   if (active === -1) return;
   const s = stickers[active];
   s.scale = clamp(s.scale + 0.1, 0.1, 6);
   render();
 });
-btnZoomOut.addEventListener("click", () => {
+btnZoomOut?.addEventListener('click', () => {
   if (active === -1) return;
   const s = stickers[active];
   s.scale = clamp(s.scale - 0.1, 0.1, 6);
   render();
 });
-btnRotL.addEventListener("click", () => {
+btnRotL?.addEventListener('click', () => {
   if (active === -1) return;
   stickers[active].rot -= Math.PI / 24;
   render();
 });
-btnRotR.addEventListener("click", () => {
+btnRotR?.addEventListener('click', () => {
   if (active === -1) return;
   stickers[active].rot += Math.PI / 24;
   render();
 });
-
-// ===== 저장 =====
-downloadBtn.addEventListener("click", () => {
-  if (!background) return alert("먼저 배경 이미지를 업로드하세요.");
-  const url = canvas.toDataURL("image/png");
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "stickered.png";
-  // iOS 사파리는 download 미지원 → fallback
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  if (isIOS) window.open(url, "_blank");
-  else a.click();
-});
-openNewTabBtn.addEventListener("click", () => {
-  if (!background) return alert("먼저 배경 이미지를 업로드하세요.");
-  const url = canvas.toDataURL("image/png");
-  window.open(url, "_blank"); // iOS에서도 롱프레스로 저장 가능
+deleteBtn?.addEventListener('click', () => {
+  if (active !== -1) {
+    stickers.splice(active, 1);
+    active = -1;
+    render();
+  }
 });
 
-// ===== 헬퍼 =====
-function clamp(v, a, b) {
-  return Math.max(a, Math.min(b, v));
+// ===== 선택 표시 제외하고 내보내기(오프스크린 캔버스) =====
+function exportImageToDataURL() {
+  // 1) 오프스크린 준비: 현재 내부 해상도와 동일
+  const off = document.createElement('canvas');
+  off.width = canvas.width;
+  off.height = canvas.height;
+  const offCtx = off.getContext('2d');
+
+  // 2) 화면과 동일한 좌표계 세팅
+  const dpr = canvas.width / cssSize.w; // 내부픽셀 / CSS픽셀
+  offCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // 3) 선택표시 없이 그리기
+  drawScene(offCtx, { showSelection: false });
+
+  // 4) PNG DataURL 반환
+  return off.toDataURL('image/png');
 }
 
-// 초기 DPR 세팅 & 리사이즈 대응
+// ===== 저장/공유 =====
+downloadBtn?.addEventListener('click', () => {
+  if (!background) return alert('먼저 배경 이미지를 업로드하세요.');
+  const url = exportImageToDataURL();
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'stickered.png';
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  if (isIOS) window.open(url, '_blank'); // iOS 대안
+  else a.click();
+});
+
+openNewTabBtn?.addEventListener('click', () => {
+  if (!background) return alert('먼저 배경 이미지를 업로드하세요.');
+  const url = exportImageToDataURL();
+  window.open(url, '_blank'); // iOS에서도 롱프레스로 저장 가능
+});
+
+// ===== 초기화 =====
 function handleResize() {
   applyDPR();
   render();
 }
-window.addEventListener("resize", handleResize);
+window.addEventListener('resize', handleResize);
 
-// ===== 시작 =====
 applyDPR();
 buildGallery().then(render);
