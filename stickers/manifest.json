@@ -1,0 +1,227 @@
+{
+  "version": 1,
+  "categories": [
+    {
+      "id": "basic",
+      "title": "기본",
+      "items": [
+        {
+          "id": "1",
+          "title": "1",
+          "thumb": "./stickers/1.webp",
+          "src": "./stickers/1.png"
+        },
+        {
+          "id": "2",
+          "title": "2",
+          "thumb": "./stickers/2.webp",
+          "src": "./stickers/2.png"
+        },
+        {
+          "id": "3",
+          "title": "3",
+          "thumb": "./stickers/3.webp",
+          "src": "./stickers/3.png"
+        },
+        {
+          "id": "4",
+          "title": "4",
+          "thumb": "./stickers/4.webp",
+          "src": "./stickers/4.png"
+        },
+        {
+          "id": "5",
+          "title": "5",
+          "thumb": "./stickers/5.webp",
+          "src": "./stickers/5.png"
+        },
+        {
+          "id": "6",
+          "title": "6",
+          "thumb": "./stickers/6.webp",
+          "src": "./stickers/6.png"
+        },
+        {
+          "id": "7",
+          "title": "7",
+          "thumb": "./stickers/7.webp",
+          "src": "./stickers/7.png"
+        },
+        {
+          "id": "8",
+          "title": "8",
+          "thumb": "./stickers/8.webp",
+          "src": "./stickers/8.png"
+        },
+        {
+          "id": "9",
+          "title": "9",
+          "thumb": "./stickers/9.webp",
+          "src": "./stickers/9.png"
+        },
+        {
+          "id": "10",
+          "title": "10",
+          "thumb": "./stickers/10.webp",
+          "src": "./stickers/10.png"
+        },
+        {
+          "id": "11",
+          "title": "11",
+          "thumb": "./stickers/11.webp",
+          "src": "./stickers/11.png"
+        },
+        {
+          "id": "12",
+          "title": "12",
+          "thumb": "./stickers/12.webp",
+          "src": "./stickers/12.png"
+        },
+        {
+          "id": "13",
+          "title": "13",
+          "thumb": "./stickers/13.webp",
+          "src": "./stickers/13.png"
+        },
+        {
+          "id": "14",
+          "title": "14",
+          "thumb": "./stickers/14.webp",
+          "src": "./stickers/14.png"
+        },
+        {
+          "id": "15",
+          "title": "15",
+          "thumb": "./stickers/15.webp",
+          "src": "./stickers/15.png"
+        },
+        {
+          "id": "16",
+          "title": "16",
+          "thumb": "./stickers/16.webp",
+          "src": "./stickers/16.png"
+        },
+        {
+          "id": "17",
+          "title": "17",
+          "thumb": "./stickers/17.webp",
+          "src": "./stickers/17.png"
+        },
+        {
+          "id": "18",
+          "title": "18",
+          "thumb": "./stickers/18.webp",
+          "src": "./stickers/18.png"
+        },
+        {
+          "id": "19",
+          "title": "19",
+          "thumb": "./stickers/19.webp",
+          "src": "./stickers/19.png"
+        },
+        {
+          "id": "20",
+          "title": "20",
+          "thumb": "./stickers/20.webp",
+          "src": "./stickers/20.png"
+        },
+        {
+          "id": "21",
+          "title": "21",
+          "thumb": "./stickers/21.webp",
+          "src": "./stickers/21.png"
+        },
+        {
+          "id": "22",
+          "title": "22",
+          "thumb": "./stickers/22.webp",
+          "src": "./stickers/22.png"
+        },
+        {
+          "id": "23",
+          "title": "23",
+          "thumb": "./stickers/23.webp",
+          "src": "./stickers/23.png"
+        },
+        {
+          "id": "24",
+          "title": "24",
+          "thumb": "./stickers/24.webp",
+          "src": "./stickers/24.png"
+        },
+        {
+          "id": "25",
+          "title": "25",
+          "thumb": "./stickers/25.webp",
+          "src": "./stickers/25.png"
+        },
+        {
+          "id": "26",
+          "title": "26",
+          "thumb": "./stickers/26.webp",
+          "src": "./stickers/26.png"
+        },
+        {
+          "id": "27",
+          "title": "27",
+          "thumb": "./stickers/27.webp",
+          "src": "./stickers/27.png"
+        },
+        {
+          "id": "28",
+          "title": "28",
+          "thumb": "./stickers/28.webp",
+          "src": "./stickers/28.png"
+        },
+        {
+          "id": "29",
+          "title": "29",
+          "thumb": "./stickers/29.webp",
+          "src": "./stickers/29.png"
+        },
+        {
+          "id": "30",
+          "title": "30",
+          "thumb": "./stickers/30.webp",
+          "src": "./stickers/30.png"
+        },
+        {
+          "id": "31",
+          "title": "31",
+          "thumb": "./stickers/31.webp",
+          "src": "./stickers/31.png"
+        },
+        {
+          "id": "32",
+          "title": "32",
+          "thumb": "./stickers/32.webp",
+          "src": "./stickers/32.png"
+        },
+        {
+          "id": "33",
+          "title": "33",
+          "thumb": "./stickers/33.webp",
+          "src": "./stickers/33.png"
+        },
+        {
+          "id": "34",
+          "title": "34",
+          "thumb": "./stickers/34.webp",
+          "src": "./stickers/34.png"
+        },
+        {
+          "id": "35",
+          "title": "35",
+          "thumb": "./stickers/35.webp",
+          "src": "./stickers/35.png"
+        },
+        {
+          "id": "36",
+          "title": "36",
+          "thumb": "./stickers/36.webp",
+          "src": "./stickers/36.png"
+        }
+      ]
+    }
+  ]
+}
